@@ -1,4 +1,4 @@
-from flask import request, redirect, session
+from flask import request, redirect, session, render_template
 import msal
 import requests
 
@@ -20,29 +20,30 @@ if cache_content:
 
 
 def register_routes(app):
-    @app.route('/login', methods=['POST'])
+    @app.route('/login', methods=['GET', 'POST'])
     def login():
-        data = request.json
+        if request.method == 'GET':
+            return render_template('login.html')
+        elif request.method == 'POST':
+            client_id = request.form.get('client_id')
+            client_secret = request.form.get('client_secret')
+            tenant_id = request.form.get('tenant_id')
 
-        client_id = data.get('client_id')
-        client_secret = data.get('client_secret')
-        tenant_id = data.get('tenant_id')
+            # Save the client ID, client secret, and tenant ID in the session.
+            session['client_id'] = client_id
+            session['client_secret'] = client_secret
+            session['tenant_id'] = tenant_id
 
-        # Save the client ID, client secret, and tenant ID in the session.
-        session['client_id'] = client_id
-        session['client_secret'] = client_secret
-        session['tenant_id'] = tenant_id
+            perms_manager = MSDelegatedPermissionsManager(
+                client_id=client_id,
+                client_secret=client_secret,
+                tenant_id=tenant_id,
+                cache=cache,
+            )
 
-        perms_manager = MSDelegatedPermissionsManager(
-            client_id=client_id,
-            client_secret=client_secret,
-            tenant_id=tenant_id,
-            cache=cache,
-        )
+            auth_url = perms_manager.get_auth_url()
 
-        auth_url = perms_manager.get_auth_url()
-
-        return redirect(auth_url)
+            return redirect(auth_url)
     
 
     @app.route('/callback', methods=['GET'])
