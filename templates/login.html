@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<h2>Welcome to the Login Page</h2>
+
+<form method="POST" action="{{ url_for('login') }}">
+    <label for="client_id">Client ID:</label>
+    <input type="text" id="client_id" name="client_id">
+    <br>
+    <label for="client_secret">Client Secret:</label>
+    <input type="password" id="client_secret" name="client_secret">
+    <br>
+    <label for="tenant_id">Tenant ID:</label>
+    <input type="password" id="tenant_id" name="tenant_id">
+    <button type="submit">Login</button>
+</form>
+
+{% endblock %}
