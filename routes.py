@@ -1,4 +1,4 @@
-from flask import request, redirect
+from flask import request, redirect, session
 import msal
 import requests
 
@@ -28,6 +28,11 @@ def register_routes(app):
         client_secret = data.get('client_secret')
         tenant_id = data.get('tenant_id')
 
+        # Save the client ID, client secret, and tenant ID in the session.
+        session['client_id'] = client_id
+        session['client_secret'] = client_secret
+        session['tenant_id'] = tenant_id
+
         perms_manager = MSDelegatedPermissionsManager(
             client_id=client_id,
             client_secret=client_secret,
@@ -45,9 +50,9 @@ def register_routes(app):
         code = request.args.get('code')
 
         perms_manager = MSDelegatedPermissionsManager(
-            client_id=None,
-            client_secret=None,
-            tenant_id=None,
+            client_id=session.get('client_id'),
+            client_secret=session.get('client_secret'),
+            tenant_id=session.get('tenant_id'),
             cache=cache,
             code=code,
         )
