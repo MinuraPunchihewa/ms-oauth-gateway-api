@@ -34,6 +34,21 @@ class MSDelegatedPermissionsManager:
         self.scopes = scopes
         self.code = code
 
+    def get_auth_url(self) -> Text:
+        """
+        Returns the authorization request URL for the Microsoft Graph API.
+
+        Returns:
+            Text: The authorization request URL for the Microsoft Graph API.
+        """
+        msal_app = self._get_msal_app()
+
+        auth_url = msal_app.get_authorization_request_url(
+            scopes=self.scopes
+        )
+
+        return auth_url
+
     def get_access_token(self) -> Text:
         """
         Retrieves an access token for the Microsoft Graph API.
@@ -53,17 +68,13 @@ class MSDelegatedPermissionsManager:
                 return response['access_token']
 
         # If no valid access token is found in the cache, run the authentication flow.
-        response = self._execute_ms_graph_api_auth_flow()
+        response = msal_app.acquire_token_by_authorization_code(
+            code=self.code,
+            scopes=self.scopes
+        )
 
         if "access_token" in response:
             return response['access_token']
-        # If no access token is returned, raise an exception.
-        # This is the expected behaviour when the user attempts to authenticate for the first time.
-        else:
-            raise Exception(
-                f'Error getting access token: {response.get("error_description")}',
-                auth_url=response.get('auth_url')
-            )
 
     def _get_msal_app(self) -> msal.ConfidentialClientApplication:
         """
@@ -79,33 +90,3 @@ class MSDelegatedPermissionsManager:
             token_cache=self.cache,
         )
 
-    def _execute_ms_graph_api_auth_flow(self) -> Dict:
-        """
-        Executes the authentication flow for the Microsoft Graph API.
-        If the authentication code is provided, the token is acquired by authorization code.
-        Otherwise, the authorization request URL is returned.
-
-        Raises:
-            AuthException: If the authentication code is not provided
-
-        Returns:
-            Dict: The response from the Microsoft Graph API authentication flow.
-        """
-        msal_app = self._get_msal_app()
-
-        # If the authentication code is provided, acquire the token by authorization code.
-        if self.code:
-            response = msal_app.acquire_token_by_authorization_code(
-                code=self.code,
-                scopes=self.scopes
-            )
-
-            return response
-
-        # If the authentication code is not provided, get the authorization request URL.
-        else:
-            auth_url = msal_app.get_authorization_request_url(
-                scopes=self.scopes
-            )
-
-            raise Exception(f'Authorisation required. Please follow the url: {auth_url}', auth_url=auth_url)
