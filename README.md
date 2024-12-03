@@ -1,6 +1,3 @@
-from app import create_app
+# Microsoft OAuth2.0 Gateway API
 
-app = create_app()
-
-if **name** == '**main**':
-app.run(host='0.0.0.0', debug=True)
+This is a simple API that allows you to authenticate with Microsoft using OAuth2.0 and retrieve the user's profile information.
